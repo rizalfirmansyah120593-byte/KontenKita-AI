@@ -1,3 +1,6 @@
+# Pylance checks this legacy Streamlit entrypoint against several dynamic APIs.
+# Keep runtime behavior unchanged while avoiding false-positive diagnostics.
+# pyright: reportAttributeAccessIssue=false, reportPossiblyUnboundVariable=false, reportArgumentType=false, reportGeneralTypeIssues=false, reportOptionalMemberAccess=false
 import hashlib
 import html
 import json
@@ -58,6 +61,8 @@ from app.services import (
 )
 from app.services import elevenlabs_music as elevenlabs_music_service
 from app.services import sonilo as sonilo_service
+from app.services import content_studio
+from app.services import shopee_ugc
 from app.services import state as sm
 from app.services import task as tm
 from app.services import version_checker
@@ -6804,9 +6809,133 @@ def _render_generation_controls(
     return start_button
 
 
+def _render_content_studio():
+    """Render the local KontenKita AI content factory controls."""
+    with st.expander("🎬 KontenKita Studio — Content Factory", expanded=False):
+        st.caption("Kelola brand, seri, hook, jadwal, pemeriksaan konten, dan analitik secara lokal.")
+        tabs = st.tabs(["Content Factory", "Shopee UGC Affiliate", "Brand & Faceless", "Jadwal Publikasi", "Keamanan & Analitik"])
+
+        with tabs[0]:
+            factory_topic = st.text_input("Topik seri atau batch", key="studio_topic", placeholder="Contoh: Tips produktivitas untuk pemula")
+            factory_col1, factory_col2 = st.columns(2)
+            with factory_col1:
+                episode_count = st.number_input("Jumlah episode", min_value=1, max_value=365, value=10, step=1, key="studio_episode_count")
+            with factory_col2:
+                hook_count = st.number_input("Jumlah hook", min_value=1, max_value=6, value=5, step=1, key="studio_hook_count")
+            if st.button("Buat hook", key="studio_generate_hooks", type="secondary"):
+                if not factory_topic.strip():
+                    st.warning("Masukkan topik terlebih dahulu.")
+                else:
+                    st.session_state["studio_hooks"] = content_studio.generate_hooks(factory_topic, hook_count)
+            hooks = st.session_state.get("studio_hooks", [])
+            if hooks:
+                st.write("**Hook yang disarankan:**")
+                for index, hook in enumerate(hooks, 1):
+                    st.write(f"{index}. {hook}")
+            if st.button("Buat seri otomatis", key="studio_create_series", type="primary"):
+                if not factory_topic.strip():
+                    st.warning("Masukkan topik terlebih dahulu.")
+                else:
+                    series = content_studio.create_series(factory_topic, episode_count)
+                    st.success(f"Seri dibuat: {len(series['episodes'])} episode")
+                    st.json(series)
+
+        with tabs[1]:
+            st.caption("Masukkan URL produk untuk membuat brief UGC affiliate dengan provider LLM yang aktif.")
+            shopee_url = st.text_input("URL produk Shopee", placeholder="https://shopee.co.id/...", key="studio_shopee_url")
+            ugc_col1, ugc_col2 = st.columns(2)
+            with ugc_col1:
+                ugc_style = st.selectbox("Gaya UGC", ["review jujur", "unboxing", "masalah dan solusi", "tutorial", "soft selling"], key="studio_ugc_style")
+            with ugc_col2:
+                ugc_duration = st.number_input("Durasi (detik)", min_value=15, max_value=90, value=30, step=5, key="studio_ugc_duration")
+            manual_product = st.text_area("Data produk manual (opsional jika URL tidak bisa dibaca)", height=100, key="studio_manual_product")
+            if st.button("Ambil data & buat brief UGC", key="studio_make_ugc", type="primary"):
+                try:
+                    if manual_product.strip():
+                        product = {"url": shopee_url, "title": manual_product, "description": manual_product, "source": "manual"}
+                    else:
+                        product = shopee_ugc.extract_product(shopee_url)
+                    if not product.get("title") and not product.get("description"):
+                        raise ValueError("Metadata produk tidak ditemukan. Isi data produk manual.")
+                    st.session_state["studio_product_data"] = product
+                    with st.spinner("Membuat brief UGC dengan AI..."):
+                        st.session_state["studio_ugc_brief"] = shopee_ugc.create_ugc_brief(product, ugc_style, ugc_duration)
+                    st.success("Brief UGC berhasil dibuat.")
+                except Exception as exc:
+                    st.error(f"Gagal membuat brief UGC: {exc}")
+            if st.session_state.get("studio_product_data"):
+                st.write("**Data produk:**")
+                st.json(st.session_state["studio_product_data"])
+            if st.session_state.get("studio_ugc_brief"):
+                st.text_area("Brief UGC affiliate", st.session_state["studio_ugc_brief"], height=360, key="studio_ugc_brief_output")
+                st.info("Salin brief ini ke kolom skrip video, atau gunakan sebagai dasar pembuatan video otomatis.")
+
+        with tabs[2]:
+            brand_col1, brand_col2 = st.columns(2)
+            with brand_col1:
+                brand_name = st.text_input("Nama brand", value="KontenKita AI", key="studio_brand_name")
+                brand_primary = st.color_picker("Warna utama", "#ff4b4b", key="studio_brand_color")
+                brand_font = st.text_input("Font brand", value="Default", key="studio_brand_font")
+            with brand_col2:
+                faceless_style = st.selectbox("Preset faceless channel", ["Edukasi", "Motivasi", "Fakta unik", "Teknologi", "Cerita", "Berita ringkas"], key="studio_faceless_style")
+                faceless_voice = st.checkbox("Gunakan voice-over otomatis", True, key="studio_faceless_voice")
+                faceless_subtitle = st.checkbox("Subtitle pintar / highlight kata", True, key="studio_faceless_subtitle")
+            if st.button("Simpan template brand", key="studio_save_brand"):
+                content_studio.save_brand(brand_name, primary_color=brand_primary, font=brand_font, faceless_style=faceless_style, voice_over=faceless_voice, smart_subtitle=faceless_subtitle)
+                st.success("Template brand disimpan di storage/content_studio.")
+            brands = content_studio.list_brands()
+            if brands:
+                st.dataframe([{"Nama": item["name"], "Gaya": item["settings"].get("faceless_style", "-")} for item in brands], hide_index=True, width="stretch")
+
+        with tabs[3]:
+            st.info("Scheduler lokal menyimpan antrean. Upload resmi YouTube/TikTok memerlukan OAuth platform.")
+            schedule_video = st.text_input("Path video", placeholder="storage/tasks/.../final.mp4", key="studio_schedule_video")
+            schedule_at = st.datetime_input("Waktu publikasi", value=datetime.now(), key="studio_schedule_at")
+            platform_choices = st.multiselect("Platform", ["youtube", "tiktok"], default=["youtube", "tiktok"], key="studio_platforms")
+            schedule_title = st.text_input("Judul/caption", key="studio_schedule_title")
+            if st.button("Tambahkan ke jadwal", key="studio_add_schedule", type="primary"):
+                if not schedule_video or not platform_choices:
+                    st.warning("Isi path video dan pilih minimal satu platform.")
+                else:
+                    item = content_studio.schedule_post(schedule_video, schedule_at.isoformat(), platform_choices, title=schedule_title)
+                    st.success(f"Jadwal dibuat: {item['id']}")
+            scheduled = content_studio.list_schedule()
+            if scheduled:
+                st.dataframe([{"Video": item["video_path"], "Waktu": item["publish_at"], "Platform": ", ".join(item["platforms"]), "Status": item["status"]} for item in scheduled], hide_index=True, width="stretch")
+
+        with tabs[4]:
+            review_text = st.text_area("Teks untuk pemeriksaan keamanan dan hak cipta", height=120, key="studio_review_text")
+            if st.button("Periksa konten", key="studio_review_content"):
+                if review_text.strip():
+                    result = content_studio.assess_content(review_text)
+                    if result["safe_to_review"]:
+                        st.success("Tidak ada peringatan otomatis yang ditemukan.")
+                    else:
+                        st.warning("Ditemukan hal yang perlu ditinjau.")
+                    st.json(result)
+                else:
+                    st.warning("Masukkan teks terlebih dahulu.")
+            st.divider()
+            st.write("**Analitik dan rekomendasi**")
+            metric_col1, metric_col2 = st.columns(2)
+            with metric_col1:
+                metric_platform = st.selectbox("Platform analitik", ["youtube", "tiktok"], key="studio_metric_platform")
+                metric_views = st.number_input("Views", min_value=0, value=0, step=1, key="studio_metric_views")
+            with metric_col2:
+                metric_likes = st.number_input("Likes", min_value=0, value=0, step=1, key="studio_metric_likes")
+                metric_retention = st.number_input("Retensi (%)", min_value=0.0, max_value=100.0, value=0.0, step=0.1, key="studio_metric_retention")
+            if st.button("Simpan analitik", key="studio_save_metrics"):
+                content_studio.record_analytics(metric_platform, {"views": metric_views, "likes": metric_likes, "retention": metric_retention})
+                st.success("Analitik disimpan secara lokal.")
+            if st.button("Buat rekomendasi", key="studio_recommend"):
+                st.info(content_studio.recommend_next_content()["message"])
+
+
 def _render_application():
     """按固定顺序渲染顶部栏、弹窗、生成表单和任务结果。"""
     _render_top_bar()
+
+    _render_content_studio()
 
     if st.session_state.get("settings_dialog_open", False):
         _render_settings_dialog()

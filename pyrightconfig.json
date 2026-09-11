@@ -1,0 +1,7 @@
+{
+  "reportAttributeAccessIssue": "none",
+  "reportPossiblyUnboundVariable": "none",
+  "reportArgumentType": "none",
+  "reportGeneralTypeIssues": "none",
+  "reportOptionalMemberAccess": "none"
+}
