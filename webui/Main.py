@@ -1091,7 +1091,7 @@ def _render_task_table(filtered_tasks, key_prefix):
                     if st.button(
                         play_label,
                         key=f"play_task_{key_prefix}_{task_id}",
-                        use_container_width=True,
+                        width="stretch",
                         icon=":material/play_arrow:",
                         help=play_label,
                         disabled=not has_video,
@@ -1103,7 +1103,7 @@ def _render_task_table(filtered_tasks, key_prefix):
                     if st.button(
                         open_label,
                         key=f"open_task_{key_prefix}_{task_id}",
-                        use_container_width=True,
+                        width="stretch",
                         icon=":material/folder_open:",
                         help=open_label,
                     ):
@@ -1114,7 +1114,7 @@ def _render_task_table(filtered_tasks, key_prefix):
                     if st.button(
                         restore_label,
                         key=f"restore_task_{key_prefix}_{task_id}",
-                        use_container_width=True,
+                        width="stretch",
                         icon=":material/replay:",
                         help=restore_label,
                         disabled=is_processing or not has_restore_data,
@@ -1131,7 +1131,7 @@ def _render_task_table(filtered_tasks, key_prefix):
                     if st.button(
                         delete_label,
                         key=f"delete_task_{key_prefix}_{task_id}",
-                        use_container_width=True,
+                        width="stretch",
                         icon=":material/delete:",
                         help=delete_help,
                         disabled=is_busy,
@@ -1196,7 +1196,7 @@ def _render_task_video_preview():
     closed = preview_cols[1].button(
         "✕",
         key="close_task_video_preview",
-        use_container_width=True,
+        width="stretch",
         help=tr("Close"),
     )
     if closed:
@@ -1445,7 +1445,7 @@ def _render_task_restore_dialog(task_id):
     if cancel_col.button(
         tr("Cancel"),
         key="cancel_task_restore",
-        use_container_width=True,
+        width="stretch",
     ):
         st.session_state.pop("task_restore_candidate_id", None)
         st.rerun(scope="app")
@@ -1453,7 +1453,7 @@ def _render_task_restore_dialog(task_id):
         tr("Load Task Configuration"),
         key="confirm_task_restore",
         type="primary",
-        use_container_width=True,
+        width="stretch",
     ):
         st.session_state["task_restore_payload"] = payload
         st.session_state.pop("task_restore_candidate_id", None)
@@ -1838,7 +1838,7 @@ def _render_generation_task_snapshot(task_id, task):
                         key=f"download_generated_video_{task_id}_{i}",
                         icon=":material/download:",
                         on_click="ignore",
-                        use_container_width=True,
+                        width="stretch",
                     )
     except Exception as exc:
         logger.exception(
@@ -2483,7 +2483,7 @@ def _render_cache_management_settings(panel):
         if refresh_col.button(
             tr("Refresh Cache Stats"),
             key="refresh_video_cache_stats",
-            use_container_width=True,
+            width="stretch",
             icon=":material/refresh:",
         ):
             _get_video_cache_stats.clear()
@@ -2492,7 +2492,7 @@ def _render_cache_management_settings(panel):
         if open_col.button(
             tr("Open Cache Directory"),
             key="open_video_cache_directory",
-            use_container_width=True,
+            width="stretch",
             icon=":material/folder_open:",
         ):
             webbrowser.open(Path(cache_manager.video_cache_dir()).as_uri())
@@ -2503,7 +2503,7 @@ def _render_cache_management_settings(panel):
             key="clean_video_cache_now",
             type="primary",
             disabled=cleanup_disabled,
-            use_container_width=True,
+            width="stretch",
             icon=":material/delete_sweep:",
         ):
             result = cache_manager.clean_video_cache(max_age_days=max_age_days)
@@ -2747,7 +2747,7 @@ def _render_settings_transfer(params):
             ),
             file_name=SETTINGS_PRESET_FILE_NAME,
             mime="application/json",
-            use_container_width=True,
+            width="stretch",
             key="export_settings_preset_button",
             icon=":material/download:",
         )
@@ -2802,7 +2802,7 @@ def _render_key_backup_settings(panel):
             file_name=KEY_BACKUP_FILE_NAME,
             mime="application/json",
             disabled=backup_key_count == 0,
-            use_container_width=True,
+            width="stretch",
             key="export_key_backup_button",
             icon=":material/download:",
         )
@@ -3236,7 +3236,7 @@ def _render_settings_dialog():
             if llm_form_panel.button(
                 tr("Test LLM Connection"),
                 key="test_llm_connection_button",
-                use_container_width=True,
+                width="stretch",
                 type="secondary",
                 icon=":material/network_check:",
             ):
@@ -3783,7 +3783,7 @@ def _render_loomloom_video_settings(params):
     if st.button(
         tr("Get LoomLoom Quote"),
         key="loomloom_quote_videos",
-        use_container_width=True,
+        width="stretch",
         type="secondary",
         icon=":material/request_quote:",
         disabled=not token or batch is None,
@@ -3866,7 +3866,7 @@ def _render_local_script_generation(params):
     if not st.button(
         tr("Generate Video Script and Keywords"),
         key="auto_generate_script",
-        use_container_width=True,
+        width="stretch",
         type="secondary",
         icon=":material/auto_awesome:",
     ):
@@ -3940,7 +3940,7 @@ def _render_loomloom_candidates():
         tr("Use Selected Candidate"),
         key="loomloom_apply_candidate",
         type="primary",
-        use_container_width=True,
+        width="stretch",
     ):
         st.session_state["video_script"] = selected.script
         st.session_state["video_terms"] = ", ".join(selected.video_terms)
@@ -4068,7 +4068,7 @@ def _render_loomloom_script_generation(params):
     if st.button(
         tr("Get LoomLoom Quote"),
         key="loomloom_quote_scripts",
-        use_container_width=True,
+        width="stretch",
         type="secondary",
         icon=":material/request_quote:",
         disabled=not effective_token or bool(st.session_state.get("loomloom_run_id")),
@@ -4142,7 +4142,7 @@ def _render_loomloom_script_generation(params):
         if st.button(
             tr("Run LoomLoom Batch"),
             key="loomloom_execute_scripts",
-            use_container_width=True,
+            width="stretch",
             type="primary",
             disabled=(not quote_is_current or not confirm_charge or run_in_progress),
         ):
@@ -4181,7 +4181,7 @@ def _render_loomloom_script_generation(params):
         if retry_col.button(
             tr("Resume LoomLoom Status Check"),
             key="loomloom_resume_status_check",
-            use_container_width=True,
+            width="stretch",
             type="secondary",
         ):
             st.session_state["loomloom_run_error"] = ""
@@ -4192,7 +4192,7 @@ def _render_loomloom_script_generation(params):
         if stop_col.button(
             tr("Stop Tracking LoomLoom Run"),
             key="loomloom_stop_tracking_run",
-            use_container_width=True,
+            width="stretch",
             type="secondary",
             help=tr("Stop Tracking LoomLoom Run Help"),
         ):
@@ -4330,14 +4330,14 @@ def _render_script_settings(panel, params):
                         key="restore_default_system_prompt",
                         icon=":material/restart_alt:",
                         on_click=reset_script_system_prompt,
-                        use_container_width=True,
+                        width="stretch",
                     ):
                         st.toast(tr("Default System Prompt Restored"))
                     if preview_prompt_col.button(
                         tr("Preview Final Prompt"),
                         key="preview_final_script_prompt",
                         icon=":material/preview:",
-                        use_container_width=True,
+                        width="stretch",
                     ):
                         render_script_prompt_preview(
                             llm.build_script_prompt(
@@ -4367,7 +4367,7 @@ def _render_script_settings(panel, params):
             elif st.button(
                 tr("Generate Video Keywords"),
                 key="auto_generate_terms",
-                use_container_width=True,
+                width="stretch",
                 type="secondary",
                 icon=":material/auto_awesome:",
             ):
@@ -5062,14 +5062,14 @@ def _render_voice_preview(params, friendly_names, selected_tts_server, voice_nam
         tr("Play Voice"),
         key="play_voice_button",
         icon=":material/graphic_eq:",
-        use_container_width=True,
+        width="stretch",
     )
     full_preview_requested = preview_columns[1].button(
         tr("Generate Full Voiceover Preview"),
         key="generate_full_voiceover_preview_button",
         icon=":material/article:",
         help=tr("Full Voiceover Preview Cost Hint"),
-        use_container_width=True,
+        width="stretch",
         disabled=not bool(script_content),
     )
 
@@ -5324,7 +5324,7 @@ def _render_minimax_tts_settings() -> tuple[list[str], dict[str, str]]:
         tr("Load MiniMax Voices"),
         key="load_minimax_voices_button",
         icon=":material/refresh:",
-        use_container_width=True,
+        width="stretch",
     ):
         try:
             available_voices = voice.get_minimax_voice_catalog(
@@ -5616,7 +5616,7 @@ def _render_background_music_settings(params, elevenlabs_api_key_rendered=False)
         if st.button(
             tr("Test Sonilo Connection"),
             key="test_sonilo_connection_button",
-            use_container_width=True,
+            width="stretch",
         ):
             try:
                 sonilo_service.test_connection()
@@ -5645,7 +5645,7 @@ def _render_background_music_settings(params, elevenlabs_api_key_rendered=False)
         if st.button(
             tr("Test ElevenLabs Connection"),
             key="test_elevenlabs_music_connection_button",
-            use_container_width=True,
+            width="stretch",
         ):
             try:
                 elevenlabs_music_service.test_connection()
@@ -6430,7 +6430,7 @@ def _render_subtitle_settings(panel, params):
                 key="restore_default_subtitle_settings",
                 icon=":material/restart_alt:",
                 on_click=reset_subtitle_settings,
-                use_container_width=True,
+                width="stretch",
             ):
                 st.toast(tr("Default Subtitle Settings Restored"))
 
@@ -6473,7 +6473,7 @@ def _render_generation_controls(
 
     start_button = st.button(
         tr("Generate Video"),
-        use_container_width=True,
+        width="stretch",
         type="primary",
         key="generate_video_button",
         on_click=_prepare_generation_task,
@@ -6813,9 +6813,54 @@ def _render_content_studio():
     """Render the local KontenKita AI content factory controls."""
     with st.expander("🎬 KontenKita Studio — Content Factory", expanded=False):
         st.caption("Kelola brand, seri, hook, jadwal, pemeriksaan konten, dan analitik secara lokal.")
-        tabs = st.tabs(["Content Factory", "Shopee UGC Affiliate", "Brand & Faceless", "Jadwal Publikasi", "Keamanan & Analitik"])
+        tabs = st.tabs(["AI Video Studio", "Content Factory", "Shopee UGC Affiliate", "Brand & Faceless", "Jadwal Publikasi", "Keamanan & Analitik"])
 
         with tabs[0]:
+            st.info("Alur: 1) Isi ide → 2) Buat storyboard → 3) Review/revisi → 4) Kirim ke generator → 5) Generate Video")
+            st.caption("Anda tidak perlu menulis script. Isi topik saja, lalu AI akan membuat struktur dan narasinya.")
+            example_topics = ["Pilih contoh...", "Energi surya di Indonesia", "Kebiasaan hidup produktif", "Teknologi AI untuk pemula"]
+            example_name = st.selectbox("Mulai dari contoh", example_topics, key="ai_studio_example")
+            if example_name != "Pilih contoh..." and not st.session_state.get("ai_studio_topic"):
+                st.session_state["ai_studio_topic"] = {"Energi surya di Indonesia": "Mengapa Indonesia harus beralih ke energi surya?", "Kebiasaan hidup produktif": "5 kebiasaan kecil yang membuat hidup lebih produktif", "Teknologi AI untuk pemula": "Bagaimana cara kerja AI dengan bahasa sederhana?"}[example_name]
+            ai_topic = st.text_input("1. Topik video", key="ai_studio_topic", placeholder="Contoh: Masa depan energi surya")
+            ai_script = st.text_area("Script (opsional)", key="ai_studio_script", height=100, help="Kosongkan jika ingin AI membuat narasi otomatis.")
+            ai_col1, ai_col2, ai_col3 = st.columns(3)
+            with ai_col1:
+                ai_style = st.selectbox("Gaya", ["documentary", "explainer", "storytelling", "listicle"], key="ai_studio_style")
+            with ai_col2:
+                ai_language = st.selectbox("Bahasa", ["id", "en", "auto"], key="ai_studio_language")
+            with ai_col3:
+                ai_duration = st.number_input("Durasi (menit)", 1, 60, 5, key="ai_studio_duration")
+            if st.button("2. Buat storyboard AI", key="ai_studio_plan", type="primary", width="stretch"):
+                try:
+                    if not ai_topic.strip() and not ai_script.strip():
+                        st.warning("Isi topik terlebih dahulu, atau masukkan script.")
+                        st.stop()
+                    st.session_state["ai_studio_plan_data"] = content_studio.create_video_plan(
+                        ai_topic, ai_script, ai_language, ai_style, ai_duration
+                    )
+                except Exception as exc:
+                    st.error(f"Gagal membuat storyboard: {exc}")
+            plan = st.session_state.get("ai_studio_plan_data")
+            if plan:
+                st.success(f"Storyboard siap: {len(plan.get('scenes', []))} scene · {plan.get('duration_seconds', 0)} detik")
+                st.caption("3. Review timeline di bawah. Anda dapat mengubah narasi, visual, atau durasi setiap scene.")
+                scene_rows = st.data_editor(
+                    [{"Scene": s["order"], "Narasi": s["narration"], "Visual/B-roll": s["visual_prompt"], "Durasi": s["duration"]} for s in plan["scenes"]],
+                    key="ai_studio_timeline", num_rows="dynamic", width="stretch",
+                    column_config={"Durasi": st.column_config.NumberColumn(min_value=3, max_value=600)},
+                )
+                revision = st.chat_input("4. Revisi dengan chat, contoh: percepat opening dan ganti visual scene 2", key="ai_studio_revision")
+                if revision:
+                    st.session_state["ai_studio_plan_data"] = content_studio.revise_video_plan(plan, revision)
+                    st.rerun()
+                if st.button("5. Kirim ke generator video", key="ai_studio_apply", type="primary", width="stretch"):
+                    st.session_state["video_subject"] = plan.get("topic", ai_topic)
+                    st.session_state["video_script"] = "\n\n".join(s.get("narration", "") for s in plan.get("scenes", []))
+                    st.session_state["video_script_prompt"] = f"Gaya: {plan.get('style', ai_style)}. Gunakan storyboard scene dan visual prompt yang tersedia."
+                    st.success("Storyboard diterapkan ke generator utama. Scroll ke bawah, periksa voice-over, musik, subtitle, lalu klik Generate Video.")
+
+        with tabs[1]:
             factory_topic = st.text_input("Topik seri atau batch", key="studio_topic", placeholder="Contoh: Tips produktivitas untuk pemula")
             factory_col1, factory_col2 = st.columns(2)
             with factory_col1:
@@ -6840,7 +6885,7 @@ def _render_content_studio():
                     st.success(f"Seri dibuat: {len(series['episodes'])} episode")
                     st.json(series)
 
-        with tabs[1]:
+        with tabs[2]:
             st.caption("Masukkan URL produk untuk membuat brief UGC affiliate dengan provider LLM yang aktif.")
             shopee_url = st.text_input("URL produk Shopee", placeholder="https://shopee.co.id/...", key="studio_shopee_url")
             ugc_col1, ugc_col2 = st.columns(2)
@@ -6870,7 +6915,7 @@ def _render_content_studio():
                 st.text_area("Brief UGC affiliate", st.session_state["studio_ugc_brief"], height=360, key="studio_ugc_brief_output")
                 st.info("Salin brief ini ke kolom skrip video, atau gunakan sebagai dasar pembuatan video otomatis.")
 
-        with tabs[2]:
+        with tabs[3]:
             brand_col1, brand_col2 = st.columns(2)
             with brand_col1:
                 brand_name = st.text_input("Nama brand", value="KontenKita AI", key="studio_brand_name")
@@ -6887,7 +6932,7 @@ def _render_content_studio():
             if brands:
                 st.dataframe([{"Nama": item["name"], "Gaya": item["settings"].get("faceless_style", "-")} for item in brands], hide_index=True, width="stretch")
 
-        with tabs[3]:
+        with tabs[4]:
             st.info("Scheduler lokal menyimpan antrean. Upload resmi YouTube/TikTok memerlukan OAuth platform.")
             schedule_video = st.text_input("Path video", placeholder="storage/tasks/.../final.mp4", key="studio_schedule_video")
             schedule_at = st.datetime_input("Waktu publikasi", value=datetime.now(), key="studio_schedule_at")
@@ -6903,7 +6948,7 @@ def _render_content_studio():
             if scheduled:
                 st.dataframe([{"Video": item["video_path"], "Waktu": item["publish_at"], "Platform": ", ".join(item["platforms"]), "Status": item["status"]} for item in scheduled], hide_index=True, width="stretch")
 
-        with tabs[4]:
+        with tabs[5]:
             review_text = st.text_area("Teks untuk pemeriksaan keamanan dan hak cipta", height=120, key="studio_review_text")
             if st.button("Periksa konten", key="studio_review_content"):
                 if review_text.strip():

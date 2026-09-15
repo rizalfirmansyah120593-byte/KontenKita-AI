@@ -9,8 +9,11 @@ from app.models.schema import (
     VideoSocialMetadataResponse,
     VideoTermsRequest,
     VideoTermsResponse,
+    StudioPlanRequest,
+    StudioRevisionRequest,
 )
 from app.services import llm
+from app.services import content_studio
 from app.utils import utils
 
 # LLM 接口与视频接口共用同一鉴权规则，避免新增端点时遗漏保护。
@@ -66,3 +69,22 @@ def generate_video_social_metadata(
         platform=body.platform,
     )
     return utils.get_response(200, metadata)
+
+
+@router.post("/studio/plan", summary="Create an intelligent video storyboard")
+def create_studio_plan(request: Request, body: StudioPlanRequest):
+    plan = content_studio.create_video_plan(
+        topic=body.topic,
+        script=body.script,
+        language=body.language,
+        style=body.style,
+        duration_minutes=body.duration_minutes,
+        brand_id=body.brand_id,
+    )
+    return utils.get_response(200, {"plan": plan})
+
+
+@router.post("/studio/revise", summary="Revise a storyboard using natural language")
+def revise_studio_plan(request: Request, body: StudioRevisionRequest):
+    plan = content_studio.revise_video_plan(body.plan, body.instruction)
+    return utils.get_response(200, {"plan": plan})

@@ -242,6 +242,20 @@ class VideoSocialMetadataRequest(VideoSocialMetadataParams, BaseModel):
     pass
 
 
+class StudioPlanRequest(BaseModel):
+    topic: str = Field(default="", max_length=1000)
+    script: str = Field(default="", max_length=50000)
+    language: str = Field(default="id", max_length=32)
+    style: str = Field(default="documentary", max_length=64)
+    duration_minutes: int = Field(default=5, ge=1, le=60)
+    brand_id: str = Field(default="", max_length=128)
+
+
+class StudioRevisionRequest(BaseModel):
+    plan: dict[str, Any]
+    instruction: str = Field(min_length=1, max_length=2000)
+
+
 # ---------------------------
 # ----- RESPONSE MODELS -----
 # ---------------------------

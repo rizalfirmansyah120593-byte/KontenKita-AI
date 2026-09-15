@@ -25,6 +25,10 @@ SCHEDULE_FILE = STUDIO_DIR / "schedule.json"
 ANALYTICS_FILE = STUDIO_DIR / "analytics.json"
 
 
+def _split_sentences(text: str) -> list[str]:
+    return [part.strip() for part in re.split(r"(?<=[.!?。！？])\s+|\n+", text) if part.strip()]
+
+
 def _read(path: Path, default: Any) -> Any:
     STUDIO_DIR.mkdir(parents=True, exist_ok=True)
     if not path.exists():
@@ -70,6 +74,83 @@ def generate_hooks(topic: str, count: int = 5) -> list[str]:
         f"Tiga hal tentang {topic} yang jarang dibahas.",
     ]
     return templates[: max(1, min(count, len(templates)))]
+
+
+def create_video_plan(
+    topic: str,
+    script: str = "",
+    language: str = "id",
+    style: str = "documentary",
+    duration_minutes: int = 5,
+    brand_id: str = "",
+) -> dict[str, Any]:
+    """Create a render-ready, provider-agnostic storyboard.
+
+    The plan is intentionally independent from any particular LLM or media
+    provider. This lets the WebUI preview/edit the plan before the expensive
+    render job starts.
+    """
+    topic = topic.strip()
+    script = script.strip()
+    if not topic and not script:
+        raise ValueError("topic atau script wajib diisi")
+    source = _split_sentences(script) if script else [
+        f"Pernah bertanya-tanya mengapa {topic} begitu penting? Mari kita lihat jawabannya.",
+        f"Untuk memahaminya, kita perlu melihat konteks dan fakta utama di balik {topic}.",
+        f"Yang paling menarik, dampak {topic} bisa kita lihat dalam contoh-contoh sederhana di sekitar kita.",
+        f"Pada akhirnya, memahami {topic} membantu kita mengambil keputusan yang lebih baik ke depannya.",
+    ]
+    target_seconds = max(30, min(int(duration_minutes) * 60, 3600))
+    scene_seconds = max(5, target_seconds // len(source))
+    scenes = []
+    for index, narration in enumerate(source, 1):
+        scenes.append({
+            "id": f"scene-{index}",
+            "order": index,
+            "narration": narration,
+            "visual_prompt": f"{style} cinematic B-roll illustrating: {narration}",
+            "search_terms": [topic, *[w for w in re.findall(r"[\w-]+", narration.lower()) if len(w) > 4][:4]],
+            "duration": scene_seconds,
+            "transition": "fade" if index > 1 else "none",
+            "status": "planned",
+        })
+    return {
+        "id": str(uuid.uuid4()),
+        "topic": topic,
+        "language": language or "auto",
+        "style": style or "documentary",
+        "duration_seconds": scene_seconds * len(scenes),
+        "brand_id": brand_id,
+        "scenes": scenes,
+        "created_at": datetime.now(timezone.utc).isoformat(),
+    }
+
+
+def revise_video_plan(plan: dict[str, Any], instruction: str) -> dict[str, Any]:
+    """Apply safe, deterministic edits requested in natural language.
+
+    LLM-backed rewriting can be layered on top later; these common edits work
+    offline and make the chat workflow useful even without an API key.
+    """
+    instruction = instruction.strip()
+    if not instruction:
+        raise ValueError("instruction wajib diisi")
+    updated = json.loads(json.dumps(plan))
+    lowered = instruction.lower()
+    if any(word in lowered for word in ("lebih cepat", "faster", "percepat")):
+        for scene in updated.get("scenes", []):
+            scene["duration"] = max(3, int(scene.get("duration", 5) * 0.8))
+        updated["duration_seconds"] = sum(s["duration"] for s in updated.get("scenes", []))
+    if any(word in lowered for word in ("lebih lambat", "slower", "perlambat")):
+        for scene in updated.get("scenes", []):
+            scene["duration"] = int(scene.get("duration", 5) * 1.2)
+        updated["duration_seconds"] = sum(s["duration"] for s in updated.get("scenes", []))
+    if "ganti" in lowered or "replace" in lowered:
+        for scene in updated.get("scenes", []):
+            scene["status"] = "needs_visual_review"
+    updated["last_revision"] = instruction
+    updated["updated_at"] = datetime.now(timezone.utc).isoformat()
+    return updated
 
 
 def create_series(topic: str, episodes: int = 10, brand_id: str = "") -> dict[str, Any]:
